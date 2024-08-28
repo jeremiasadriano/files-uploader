@@ -20,7 +20,7 @@ public class FileUploaderServiceImpl implements FileUploaderService {
     @Override
     public void fileUpload(MultipartFile file) throws IOException {
         File targetFile = getFile(randomNumberName().concat(file.getOriginalFilename()));
-        Files.copy(file.getInputStream(), targetFile.toPath());
+        Files.copy(file.getInputStream(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class FileUploaderServiceImpl implements FileUploaderService {
     /**
      * @param fileName The name of the file that is upload or download
      * @return The file
-     * @throws SecurityException If pass illegal file name such as \\ or ||
+     * @throws SecurityException If somebody tries to change the application path
      */
     private static File getFile(String fileName) {
         File targetFile = new File(STORAGE_DIRECTORY + File.separator + fileName);
