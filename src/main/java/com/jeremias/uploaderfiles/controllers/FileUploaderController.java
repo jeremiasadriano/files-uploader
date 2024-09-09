@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 
 @RestController
 @RequestMapping("/files")
@@ -36,5 +37,15 @@ public class FileUploaderController {
                 .contentLength(file.length())
                 .body(new FileSystemResource(file));
 
+    }
+
+    @PostMapping("/aws")
+    public ResponseEntity<String> awsFileUpload(@RequestParam("file") MultipartFile file) throws IOException {
+        return ResponseEntity.ok(fileUploaderService.awsFileUpload(file));
+    }
+
+    @GetMapping("/aws")
+    public ResponseEntity<String> awsFileDownload(@RequestParam("filename") String fileName) {
+        return ResponseEntity.ok(fileUploaderService.awsFileDownload(fileName));
     }
 }

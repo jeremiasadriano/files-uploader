@@ -1,25 +1,44 @@
 package com.jeremias.uploaderfiles.services.impl;
 
 import com.jeremias.uploaderfiles.services.FileUploaderService;
-import org.apache.coyote.BadRequestException;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.ILoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.transfer.s3.S3TransferManager;
+import software.amazon.awssdk.transfer.s3.model.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.Random;
 
 @Service
 public class FileUploaderServiceImpl implements FileUploaderService {
-    public static final String STORAGE_DIRECTORY = "/home/godal/ProgrammingZone/Java";
+    @Value("${storage.directory}")
+    private String storagePath;
+    @Value("${aws.bucket.s3.name}")
+    private String bucketName;
+    private final S3TransferManager transferManager;
+    private static String STORAGE_DIRECTORY;
+
+    public FileUploaderServiceImpl(S3TransferManager transferManager) {
+        this.transferManager = transferManager;
+    }
+
+    @PostConstruct
+    public void init() {
+        STORAGE_DIRECTORY = storagePath;
+    }
 
     @Override
     public void fileUpload(MultipartFile file) throws IOException {
-        File targetFile = getFile(randomNumberName().concat(file.getOriginalFilename()));
+        File targetFile = getFile(randomNumberName().concat(Objects.requireNonNull(file.getOriginalFilename())));
         Files.copy(file.getInputStream(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
@@ -28,6 +47,28 @@ public class FileUploaderServiceImpl implements FileUploaderService {
         File targetFile = getFile(fileName);
         if (!targetFile.exists()) System.out.println(targetFile.toPath());
         return targetFile;
+    }
+
+    @Override
+    public String awsFileUpload(MultipartFile file) throws IOException {
+        File tempFile = File.createTempFile("aws-upload:", file.getOriginalFilename()); //Generate a new temp File with aws-upload prefix
+        file.transferTo(tempFile); // then move all metadata from file(multipart) to my tempFile.
+        var uploadFileRequest = UploadFileRequest.builder()
+                .putObjectRequest(req -> req.bucket(bucketName).key(file.getOriginalFilename()))
+                .source(tempFile)
+                .build();
+        transferManager.uploadFile(uploadFileRequest);
+        return "Success!";
+    }
+
+    @Override
+    public String awsFileDownload(String fileName) {
+        var downloadFileRequest = DownloadFileRequest.builder()
+                .getObjectRequest(req -> req.bucket(bucketName).key(fileName))
+                .destination(Paths.get(STORAGE_DIRECTORY, fileName))
+                .build();
+        transferManager.downloadFile(downloadFileRequest);
+        return "Success!";
     }
 
     /**
