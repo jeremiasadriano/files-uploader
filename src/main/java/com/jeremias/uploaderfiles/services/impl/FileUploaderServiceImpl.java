@@ -2,17 +2,15 @@ package com.jeremias.uploaderfiles.services.impl;
 
 import com.jeremias.uploaderfiles.services.FileUploaderService;
 import jakarta.annotation.PostConstruct;
-import org.slf4j.ILoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
 import software.amazon.awssdk.transfer.s3.model.*;
+import software.amazon.awssdk.transfer.s3.progress.LoggingTransferListener;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
@@ -55,6 +53,7 @@ public class FileUploaderServiceImpl implements FileUploaderService {
         file.transferTo(tempFile); // then move all metadata from file(multipart) to my tempFile.
         var uploadFileRequest = UploadFileRequest.builder()
                 .putObjectRequest(req -> req.bucket(bucketName).key(file.getOriginalFilename()))
+                .addTransferListener(LoggingTransferListener.create())
                 .source(tempFile)
                 .build();
         transferManager.uploadFile(uploadFileRequest);
@@ -66,8 +65,9 @@ public class FileUploaderServiceImpl implements FileUploaderService {
         var downloadFileRequest = DownloadFileRequest.builder()
                 .getObjectRequest(req -> req.bucket(bucketName).key(fileName))
                 .destination(Paths.get(STORAGE_DIRECTORY, fileName))
+                .addTransferListener(LoggingTransferListener.create())
                 .build();
-        transferManager.downloadFile(downloadFileRequest);
+        transferManager.downloadFile(downloadFileRequest).completionFuture().join();
         return "Success!";
     }
 

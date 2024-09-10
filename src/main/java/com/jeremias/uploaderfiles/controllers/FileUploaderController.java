@@ -11,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 
 @RestController
 @RequestMapping("/files")
@@ -32,7 +31,7 @@ public class FileUploaderController {
     public ResponseEntity<Resource> fileDownload(@RequestParam("filename") String fileName) {
         File file = fileUploaderService.fileDownload(fileName);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName.substring(10) + "\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .contentLength(file.length())
                 .body(new FileSystemResource(file));
