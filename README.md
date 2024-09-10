@@ -45,22 +45,22 @@ Before getting started, make sure you have the following:
 
 ### Local File Upload
 
-- Endpoint: POST /files 
+- Endpoint: **POST** /files 
 - Parameters: ``file`` (file to upload)
-- Response: 200 OK with the message "Success!"
+- Response: ``200 OK`` with the message "Success!"
 
 ### Local File Download
 
-- Endpoint: GET /files 
-- Parameters: ``filename`` (**the absolute** name of the file to download)
+- Endpoint: **GET** /files 
+- Parameters: ``filename`` (**the absolute name** of the file to download)
 - Response: The requested file as an attachment.
 
 ### AWS S3 Upload
-- Endpoint: POST /files/aws 
+- Endpoint: **POST** /files/aws 
 - Parameters: ``file`` (file to upload)
-- Response: 200 OK with the message "Success!"
+- Response: ``200 OK`` with the message "Success!"
 
 ### AWS S3 Download
-- Endpoint: GET /files/aws 
+- Endpoint: **GET** /files/aws 
 - Parameters: ``filename`` (**the absolute name** of the file to download)
-- Response: 200 OK with the message "Success!"
+- Response: ``200 OK`` with the message "Success!"
